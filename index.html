@@ -6,41 +6,29 @@
     <title>ISSC Crew 所属医療機関MAP</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Leaflet CSS (Map) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRSq550=" crossorigin="" />
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         /* Custom Styles for Map Height */
-        #map {
+        #map-container {
             height: 50vh;
             width: 100%;
-            z-index: 1;
+            background-color: #e5e7eb; /* Fallback color */
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
         }
         @media (min-width: 768px) {
-            #map {
+            #map-container {
                 height: calc(100vh - 80px); /* Adjust for header */
             }
         }
         .hospital-card:hover {
             background-color: #f0f9ff;
             cursor: pointer;
-        }
-        .active-card {
-            border-left: 4px solid #3b82f6;
-            background-color: #eff6ff;
-        }
-        /* Leaflet Popup Styles */
-        .leaflet-popup-content-wrapper {
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .leaflet-popup-content h3 {
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: #1e3a8a;
-            margin-bottom: 4px;
         }
     </style>
 </head>
@@ -53,10 +41,9 @@
                 <h1 class="text-xl md:text-2xl font-bold">ISSC Crew 所属医療機関MAP</h1>
                 <p class="text-xs md:text-sm text-blue-200">選手のための最寄り医院検索ガイド</p>
             </div>
-            <div class="mt-2 md:mt-0 text-xs flex gap-3">
-                <span class="flex items-center"><i class="fas fa-circle text-blue-500 mr-1"></i> 病院</span>
-                <span class="flex items-center"><i class="fas fa-circle text-cyan-400 mr-1"></i> クリニック</span>
-                <span class="flex items-center"><i class="fas fa-circle text-green-500 mr-1"></i> 接骨院</span>
+            <!-- Legend is handled inside Google My Maps, but kept here for quick reference if needed, or can be removed to reduce clutter -->
+            <div class="mt-2 md:mt-0 text-xs flex gap-3 opacity-80">
+                <span><i class="fas fa-map text-white mr-1"></i> Googleマイマップ表示中</span>
             </div>
         </div>
     </header>
@@ -65,15 +52,17 @@
     <div class="flex flex-col md:flex-row h-full">
         
         <!-- Map Container (Top on Mobile, Left on Desktop) -->
-        <div class="w-full md:w-2/3 relative order-1 md:order-1">
-            <div id="map"></div>
+        <div id="map-container" class="w-full md:w-2/3 relative order-1 md:order-1 shadow-inner">
+            <!-- Google My Maps Embed -->
+            <!-- Note: Changed /edit to /embed in the URL for proper display -->
+            <iframe src="https://www.google.com/maps/d/embed?mid=1iiW5uy7_Stgv0C6iq_t56bD2gtDB0M8&ehbc=2E312F"></iframe>
         </div>
 
         <!-- List Container (Bottom on Mobile, Right on Desktop) -->
         <div class="w-full md:w-1/3 bg-white overflow-y-auto h-[50vh] md:h-[calc(100vh-80px)] order-2 md:order-2 shadow-lg z-10">
             <div class="p-4 border-b bg-gray-100">
                 <h2 class="font-bold text-gray-700"><i class="fas fa-list-ul mr-2"></i>医療機関リスト</h2>
-                <p class="text-xs text-gray-500">リストをタップすると地図が移動します</p>
+                <p class="text-xs text-gray-500">詳細確認・電話・ナビ起動はこちらから</p>
             </div>
             
             <div id="hospital-list" class="divide-y divide-gray-200">
@@ -82,12 +71,8 @@
         </div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
     <script>
-        // Data Structure based on user input
-        // Coordinates are approximate for demonstration. In production, use precise geocoding.
+        // Data Structure
         const hospitals = [
             // 北部・西部
             { 
@@ -96,9 +81,8 @@
                 tel: "076-237-9200", 
                 address: "金沢市松寺町子41-1", 
                 crew: "端 由依", 
-                type: "hospital", // hospital, clinic, sekkotsuin
-                area: "金沢市北部・西部",
-                lat: 36.6085, lng: 136.6575 
+                type: "hospital", 
+                area: "金沢市北部・西部"
             },
             { 
                 id: 2, 
@@ -107,8 +91,7 @@
                 address: "金沢市三池栄町323", 
                 crew: "徳川 龍太朗", 
                 type: "clinic", 
-                area: "金沢市北部・西部",
-                lat: 36.5865, lng: 136.6785 
+                area: "金沢市北部・西部"
             },
             { 
                 id: 3, 
@@ -117,8 +100,7 @@
                 address: "金沢市赤土町ニ13-6", 
                 crew: "原 淳子 / 森 健太郎", 
                 type: "hospital", 
-                area: "金沢市北部・西部",
-                lat: 36.6025, lng: 136.6255 
+                area: "金沢市北部・西部"
             },
             // 中心部・南部
             { 
@@ -128,8 +110,7 @@
                 address: "金沢市宝町13-1", 
                 crew: "水野 雄伸", 
                 type: "hospital", 
-                area: "金沢市中心部・南部",
-                lat: 36.5555, lng: 136.6720 
+                area: "金沢市中心部・南部"
             },
             { 
                 id: 5, 
@@ -138,8 +119,7 @@
                 address: "金沢市八日市5丁目451", 
                 crew: "成宮 久詞", 
                 type: "clinic", 
-                area: "金沢市中心部・南部",
-                lat: 36.5420, lng: 136.6150 
+                area: "金沢市中心部・南部"
             },
             // 野々市・白山・能美
             { 
@@ -149,8 +129,7 @@
                 address: "野々市市扇が丘24-11", 
                 crew: "宮本 啓治", 
                 type: "clinic", 
-                area: "野々市市・白山市・能美郡",
-                lat: 36.5265, lng: 136.6155 
+                area: "野々市市・白山市・能美郡"
             },
             { 
                 id: 7, 
@@ -159,8 +138,7 @@
                 address: "白山市中成2丁目362", 
                 crew: "西本 正幸", 
                 type: "sekkotsuin", 
-                area: "野々市市・白山市・能美郡",
-                lat: 36.5020, lng: 136.5820 
+                area: "野々市市・白山市・能美郡"
             },
             { 
                 id: 8, 
@@ -169,8 +147,7 @@
                 address: "能美郡川北町田子島ち-60", 
                 crew: "中村 拓也", 
                 type: "sekkotsuin", 
-                area: "野々市市・白山市・能美郡",
-                lat: 36.4750, lng: 136.5350 
+                area: "野々市市・白山市・能美郡"
             },
             // 小松・加賀
             { 
@@ -180,8 +157,7 @@
                 address: "小松市園町ホ-99-1", 
                 crew: "佐藤 裕之", 
                 type: "hospital", 
-                area: "小松市・加賀市",
-                lat: 36.4080, lng: 136.4520 
+                area: "小松市・加賀市"
             },
             { 
                 id: 10, 
@@ -190,48 +166,19 @@
                 address: "加賀市山中温泉東町1丁目マ-25", 
                 crew: "佐藤 裕之", 
                 type: "sekkotsuin", 
-                area: "小松市・加賀市",
-                lat: 36.2480, lng: 136.3720 
+                area: "小松市・加賀市"
             }
         ];
 
-        // --- Map Initialization ---
-        const map = L.map('map').setView([36.5, 136.6], 10); // Center on Ishikawa
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 19
-        }).addTo(map);
-
-        // --- Custom Icons ---
-        const createIcon = (color) => {
-            return L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display:flex; justify-content:center; align-items:center; color:white; font-weight:bold; font-size:12px;"></div>`,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12],
-                popupAnchor: [0, -12]
-            });
-        };
-
-        const icons = {
-            hospital: createIcon('#3b82f6'), // Blue
-            clinic: createIcon('#22d3ee'),   // Cyan
-            sekkotsuin: createIcon('#22c55e') // Green
-        };
-
-        const markers = {};
-
-        // --- Render List & Markers ---
+        // --- Render List ---
         const listContainer = document.getElementById('hospital-list');
         let currentArea = "";
 
-        hospitals.forEach((h, index) => {
+        hospitals.forEach((h) => {
             // Add Area Header if needed
             if (h.area !== currentArea) {
                 const areaHeader = document.createElement('div');
-                areaHeader.className = "bg-gray-200 text-gray-700 font-bold px-4 py-2 text-sm sticky top-0";
+                areaHeader.className = "bg-gray-200 text-gray-700 font-bold px-4 py-2 text-sm sticky top-0 shadow-sm z-10";
                 areaHeader.innerText = h.area;
                 listContainer.appendChild(areaHeader);
                 currentArea = h.area;
@@ -239,13 +186,7 @@
 
             // Create List Item
             const item = document.createElement('div');
-            item.className = "hospital-card p-4 transition-all duration-200";
-            item.dataset.id = h.id;
-            
-            // Icon color for list
-            let iconColorClass = "text-blue-500";
-            if(h.type === 'clinic') iconColorClass = "text-cyan-500";
-            if(h.type === 'sekkotsuin') iconColorClass = "text-green-500";
+            item.className = "hospital-card p-4 transition-all duration-200 hover:bg-blue-50";
             
             const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.name + " " + h.address)}`;
 
@@ -261,78 +202,13 @@
                     </div>
                 </div>
                 <div class="flex gap-2 mt-2">
-                    <a href="tel:${h.tel}" class="flex-1 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded text-sm font-bold shadow transition"><i class="fas fa-phone mr-1"></i> 電話</a>
-                    <a href="${googleMapsLink}" target="_blank" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-center py-2 rounded text-sm font-bold shadow transition"><i class="fas fa-location-arrow mr-1"></i> ナビ</a>
+                    <a href="tel:${h.tel}" class="flex-1 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded text-sm font-bold shadow transition no-underline flex justify-center items-center"><i class="fas fa-phone mr-1"></i> 電話</a>
+                    <a href="${googleMapsLink}" target="_blank" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-center py-2 rounded text-sm font-bold shadow transition no-underline flex justify-center items-center"><i class="fas fa-location-arrow mr-1"></i> ナビ</a>
                 </div>
             `;
 
-            // Add Click Event to List Item
-            item.addEventListener('click', () => {
-                focusOnMarker(h.id);
-            });
-
             listContainer.appendChild(item);
-
-            // Add Marker to Map
-            const marker = L.marker([h.lat, h.lng], {
-                icon: L.divIcon({
-                    className: 'custom-marker',
-                    html: `<div style="background-color: ${h.type === 'hospital' ? '#3b82f6' : h.type === 'clinic' ? '#22d3ee' : '#22c55e'}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; color:white; font-weight:bold; font-size:14px;">${h.id}</div>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 30], // Tip of the pin logic
-                    popupAnchor: [0, -30]
-                })
-            }).addTo(map);
-
-            marker.bindPopup(`
-                <div>
-                    <h3>${h.name}</h3>
-                    <p>${h.address}</p>
-                    <p><i class="fas fa-phone"></i> ${h.tel}</p>
-                </div>
-            `);
-
-            marker.on('click', () => {
-                highlightListItem(h.id);
-            });
-
-            markers[h.id] = marker;
         });
-
-        // --- Helper Functions ---
-
-        function focusOnMarker(id) {
-            const marker = markers[id];
-            const hospital = hospitals.find(h => h.id === id);
-            
-            if (marker && hospital) {
-                // Determine zoom level based on device width
-                const zoomLevel = window.innerWidth < 768 ? 13 : 14;
-                
-                // Offset map center slightly to fit popup if needed
-                map.flyTo([hospital.lat, hospital.lng], zoomLevel, {
-                    duration: 1.5
-                });
-                
-                marker.openPopup();
-                highlightListItem(id);
-            }
-        }
-
-        function highlightListItem(id) {
-            // Remove active class from all
-            document.querySelectorAll('.hospital-card').forEach(el => {
-                el.classList.remove('active-card');
-            });
-            
-            // Add active class to selected
-            const target = document.querySelector(`.hospital-card[data-id="${id}"]`);
-            if (target) {
-                target.classList.add('active-card');
-                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-
     </script>
 </body>
 </html>
